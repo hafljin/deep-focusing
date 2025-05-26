@@ -30,6 +30,7 @@ export default function HomeScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
   const [dialogVisible, setDialogVisible] = useState<'focus' | 'strict' | null>(null);
   const [infoVisible, setInfoVisible] = useState<'howto' | 'contact' | null>(null);
+  const [genreDropdownOpen, setGenreDropdownOpen] = useState(false); // プルダウン用ステート
 
   const fadeMenu = useFadeIn(0);
   const fadePet = useFadeIn(200);
@@ -89,7 +90,7 @@ export default function HomeScreen() {
         </View>
       </View>
       {/* モード説明リンク（モード選択の直下に移動） */}
-      <View style={styles.modeDescLinkWrapper}>
+      <View style={[styles.modeDescLinkWrapper, { marginTop: 5 }]}>  {/* 上マージン追加 */}
         {mode === 'focus' && (
           <TouchableOpacity onPress={() => setDialogVisible('focus')} style={{ marginRight: 12 }}>
             <Text style={styles.modeDescLink}>{i18n.language === 'ja' ? '優しいモードとは？' : 'About Gentle Mode'}</Text>
@@ -99,6 +100,31 @@ export default function HomeScreen() {
           <TouchableOpacity onPress={() => setDialogVisible('strict')}>
             <Text style={styles.modeDescLink}>{i18n.language === 'ja' ? 'ハードモードとは？' : 'About Hard Mode'}</Text>
           </TouchableOpacity>
+        )}
+      </View>
+      {/* カテゴリー（ジャンル）プルダウン化 */}
+      <View style={styles.genrePickerWrapper}>
+        <TouchableOpacity
+          style={styles.genrePickerBox}
+          onPress={() => setGenreDropdownOpen((prev) => !prev)}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.genrePickerText}>{GENRES.find((g) => g.key === selectedGenre)?.label}</Text>
+          <Ionicons name={genreDropdownOpen ? 'chevron-up' : 'chevron-down'} size={20} color="#26A69A" style={{ marginLeft: 8 }} />
+        </TouchableOpacity>
+        {genreDropdownOpen && (
+          <View style={styles.genreDropdown}>
+            {GENRES.map((g) => (
+              <TouchableOpacity
+                key={g.key}
+                style={styles.genreDropdownItem}
+                onPress={() => { setSelectedGenre(g.key); setGenreDropdownOpen(false); }}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.genreDropdownText}>{g.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         )}
       </View>
       {/* 左上の3点リーダー */}
@@ -163,46 +189,7 @@ export default function HomeScreen() {
           </Animated.View>
         </View>
       </Animated.View>
-      {/* ジャンル選択 */}
-      <Animated.View style={[styles.genreContainer, fadeGenres]}>
-        {GENRES.map((g) => (
-          <TouchableOpacity
-            key={g.key}
-            style={[
-              styles.genreButton,
-              selectedGenre === g.key && styles.genreButtonActive,
-              focusedGenre === g.key && styles.genreButtonFocused,
-            ]}
-            onPress={() => setSelectedGenre(g.key)}
-            onFocus={() => setFocusedGenre(g.key)}
-            onBlur={() => setFocusedGenre(null)}
-            activeOpacity={0.85}
-          >
-            <Text
-              style={[
-                styles.genreText,
-                selectedGenre === g.key && styles.genreTextActive,
-                focusedGenre === g.key && styles.genreTextFocused,
-              ]}
-            >
-              {g.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </Animated.View>
-      {/* モード説明リンク（上のみ表示） */}
-      <View style={styles.modeDescLinkWrapper}>
-        {mode === 'focus' && (
-          <TouchableOpacity onPress={() => setDialogVisible('focus')} style={{ marginRight: 12 }}>
-            <Text style={styles.modeDescLink}>{i18n.language === 'ja' ? '優しいモードとは？' : 'About Gentle Mode'}</Text>
-          </TouchableOpacity>
-        )}
-        {mode === 'strict' && (
-          <TouchableOpacity onPress={() => setDialogVisible('strict')}>
-            <Text style={styles.modeDescLink}>{i18n.language === 'ja' ? 'ハードモードとは？' : 'About Hard Mode'}</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+      {/* モード選択 */}
       <Modal visible={dialogVisible !== null} transparent animationType="fade" onRequestClose={() => setDialogVisible(null)}>
         <Pressable style={styles.menuOverlay} onPress={() => setDialogVisible(null)}>
           <Animated.View style={[styles.infoModal, { alignItems: 'center' }]}> 
@@ -349,44 +336,61 @@ const styles = StyleSheet.create({
     borderRadius: 100,
     backgroundColor: '#e0f2f1',
   },
-  genreContainer: {
-    flexDirection: 'row',
+  genrePickerWrapper: {
     marginBottom: 24,
+    width: '100%',
+    alignItems: 'center', // 中央揃え
+    justifyContent: 'center', // 追加: 完全中央揃え
   },
-  genreButton: {
-    paddingHorizontal: 18,
-    paddingVertical: 8,
-    borderRadius: 20,
+  genrePickerBox: {
+    flexDirection: 'row',
     backgroundColor: '#E0E7EF',
-    marginHorizontal: 6,
-    borderWidth: 2,
-    borderColor: 'transparent',
+    borderRadius: 16,
+    padding: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    width: 220, // モード選択と同じくらいの横幅に調整
+    minWidth: 180, // 追加: 最小幅指定でバランス
+    maxWidth: 260, // 追加: 最大幅指定でバランス
+    justifyContent: 'center', // 追加: テキスト中央
     shadowColor: '#B2DFDB',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 6,
     elevation: 2,
   },
-  genreButtonActive: {
-    backgroundColor: '#B2DFDB',
-    borderColor: '#26A69A',
-  },
-  genreButtonFocused: {
-    borderColor: '#26A69A',
-    backgroundColor: '#E0F7FA',
-  },
-  genreText: {
+  genrePickerText: {
+    flex: 1,
     color: '#607D8B',
     fontSize: 16,
     fontFamily: 'Inter-Medium',
   },
-  genreTextActive: {
-    color: '#00796B',
-    fontFamily: 'Inter-Bold',
+  genreDropdown: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    marginTop: 8,
+    paddingVertical: 4,
+    width: 220, // ドロップダウンも同じ横幅
+    shadowColor: '#B2DFDB',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.10,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  genreTextFocused: {
-    color: '#004D40',
-    fontFamily: 'Inter-Bold',
+  genreDropdownItem: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    backgroundColor: 'transparent',
+  },
+  genreDropdownText: {
+    color: '#607D8B',
+    fontSize: 15,
+    fontFamily: 'Inter-Medium',
   },
   timerContainer: {
     alignItems: 'center',
